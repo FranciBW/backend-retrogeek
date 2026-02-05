@@ -67,3 +67,15 @@ export async function deleteProduct(req, res) {
   await pool.query(`DELETE FROM products WHERE id=$1`, [id]);
   return res.json({ ok: true });
 }
+
+export async function listMyProducts(req, res) {
+  const result = await pool.query(
+    `SELECT *
+     FROM products
+     WHERE user_id = $1
+     ORDER BY created_at DESC`,
+    [req.user.id]
+  );
+
+  return res.json(result.rows);
+}

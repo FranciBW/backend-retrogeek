@@ -4,12 +4,14 @@ import {
   getProduct,
   createProduct,
   deleteProduct,
+  listMyProducts,
 } from "../controllers/products.controller.js";
 import { requireAuth } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
 router.get("/", listProducts);
+router.get("/mine", requireAuth, listMyProducts);
 router.get("/:id", getProduct);
 
 // protegidas
