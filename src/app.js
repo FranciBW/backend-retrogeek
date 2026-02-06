@@ -42,3 +42,12 @@ app.get("/health", (_req, res) =>
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
+app.get("/db-test", async (_req, res) => {
+  try {
+    const { pool } = await import("./db.js"); // o donde tengas tu pool
+    const r = await pool.query("SELECT NOW() as now");
+    res.json({ ok: true, now: r.rows[0].now });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
