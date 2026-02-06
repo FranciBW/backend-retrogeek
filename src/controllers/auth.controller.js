@@ -15,19 +15,29 @@ export async function register(req, res) {
     const result = await pool.query(
       `INSERT INTO users (first_name, last_name, email, password_hash)
        VALUES ($1,$2,$3,$4)
-       RETURNING id, email`,
+       RETURNING id, first_name, last_name, email, created_at`,
       [firstName, lastName, email, password_hash]
     );
 
-    const user = result.rows[0];
+    const u = result.rows[0];
+
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: u.id, email: u.email },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    return res.status(201).json({ token, email: user.email });
-  } catch {
+    return res.status(201).json({
+      token,
+      user: {
+        id: u.id,
+        firstName: u.first_name,
+        lastName: u.last_name,
+        email: u.email,
+        createdAt: u.created_at,
+      },
+    });
+  } catch (e) {
     return res.status(409).json({ error: "Correo ya registrado" });
   }
 }
@@ -40,23 +50,33 @@ export async function login(req, res) {
   }
 
   const result = await pool.query(
-    `SELECT id, email, password_hash FROM users WHERE email=$1`,
+    `SELECT id, first_name, last_name, email, password_hash, created_at
+     FROM users WHERE email=$1`,
     [email]
   );
 
-  const user = result.rows[0];
-  if (!user) return res.status(401).json({ error: "Credenciales inválidas" });
+  const u = result.rows[0];
+  if (!u) return res.status(401).json({ error: "Credenciales inválidas" });
 
-  const ok = await bcrypt.compare(password, user.password_hash);
+  const ok = await bcrypt.compare(password, u.password_hash);
   if (!ok) return res.status(401).json({ error: "Credenciales inválidas" });
 
   const token = jwt.sign(
-    { id: user.id, email: user.email },
+    { id: u.id, email: u.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 
-  return res.json({ token, email: user.email });
+  return res.json({
+    token,
+    user: {
+      id: u.id,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      email: u.email,
+      createdAt: u.created_at,
+    },
+  });
 }
 
 export async function me(req, res) {
@@ -66,5 +86,15 @@ export async function me(req, res) {
     [req.user.id]
   );
 
-  return res.json(result.rows[0]);
+  const u = result.rows[0];
+
+  return res.json({
+    user: {
+      id: u.id,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      email: u.email,
+      createdAt: u.created_at,
+    },
+  });
 }
