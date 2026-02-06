@@ -25,23 +25,20 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.options("/*", cors({
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true);
-    const ok =
-      allowedOrigins.includes(origin) ||
-      /^https:\/\/.*\.vercel\.app$/.test(origin);
-    cb(ok ? null : new Error("CORS bloqueado"), ok);
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json());
+
 app.get("/", (_req, res) =>
   res.json({ ok: true, name: "RetroGeek API" })
 );
+
 app.get("/health", (_req, res) =>
   res.json({ ok: true })
 );
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
