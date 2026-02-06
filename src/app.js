@@ -11,24 +11,19 @@ const allowedOrigins = [
   process.env.FRONTEND_URL, // https://desafio-retrogeek.vercel.app
 ].filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Permite requests sin origin (Postman, Thunder Client)
-      if (!origin) return callback(null, true);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
 
-      const isAllowed =
-        allowedOrigins.includes(origin) ||
-        /^https:\/\/.*\.vercel\.app$/.test(origin);
+    const ok =
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin);
 
-      return isAllowed
-        ? callback(null, true)
-        : callback(new Error("CORS bloqueado"), false);
-    },
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    cb(ok ? null : new Error("CORS bloqueado"), ok);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 app.options("*", cors());
 app.use(express.json());
