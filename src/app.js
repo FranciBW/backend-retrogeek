@@ -25,7 +25,17 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-app.options("*", cors());
+app.options("/*", cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const ok =
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin);
+    cb(ok ? null : new Error("CORS bloqueado"), ok);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 app.use(express.json());
 app.get("/", (_req, res) =>
   res.json({ ok: true, name: "RetroGeek API" })
