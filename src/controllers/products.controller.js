@@ -79,3 +79,39 @@ export async function listMyProducts(req, res) {
 
   return res.json(result.rows);
 }
+
+export async function updateProduct(req, res) {
+  const { id } = req.params;
+  const { name, category, condition, price, quantity, image, description } =
+    req.body;
+  
+  if (!name || !category || !condition || price == null) {
+    return res.status(400).json({ error: "Faltan datos del producto" });
+  }
+
+  const own = await pool.query(`SELECT user_id FROM products WHERE id=$1`, [id]);
+  if (own.rows.length === 0) return res.status(404).json({ error: "No existe" });
+
+  if (own.rows[0].user_id !== req.user.id) {
+    return res.status(403).json({ error: "No autorizado" });
+  }
+
+  const result = await pool.query(
+    `UPDATE products
+     SET name=$1, category=$2, condition=$3, price=$4, quantity=$5, image=$6, description=$7
+     WHERE id=$8
+     RETURNING *`,
+    [
+      name,
+      category,
+      condition,
+      Number(price),
+      Number(quantity || 1),
+      image || null,
+      description || null,
+      id,
+    ]
+  );
+
+  return res.json(result.rows[0]);
+}
