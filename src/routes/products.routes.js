@@ -13,10 +13,10 @@ const router = Router();
 
 // públicas
 router.get("/", listProducts);
-router.get("/mine", requireAuth, listMyProducts);
 router.get("/:id", getProduct);
 
 // protegidas
+router.get("/mine", requireAuth, listMyProducts);
 router.post("/", requireAuth, createProduct);
 router.put("/:id", requireAuth, updateProduct);
 router.delete("/:id", requireAuth, deleteProduct);
